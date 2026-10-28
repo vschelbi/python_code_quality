@@ -1,0 +1,56 @@
+# .pre-commit-hooks.yaml
+# Central, reusable hooks
+
+- id: black
+  name: black
+  entry: black
+  language: system
+  types: [python]
+  args: [--line-length=99]
+
+- id: isort
+  name: isort
+  entry: isort
+  language: system
+  types: [python]
+  args: [--profile, black, --line-length, "99"]
+
+- id: flake8
+  name: flake8
+  entry: flake8
+  language: system
+  types: [python]
+  args: [--max-line-length=100, --extend-ignore=E203]
+
+- id: mypy
+  name: mypy
+  entry: setup_mypy.py
+  language: script
+  types: [python]
+
+- id: pylint
+  name: pylint
+  entry: setup_pylint.py
+  language: script
+  types: [python]
+
+# The copyright holder defaults to the placeholder "COMPANY NAME". Consuming repos set their own by
+# overriding args in their .pre-commit-config.yaml, e.g.
+#   - id: license-header
+#     args: [--company, "Acme AG"]
+# Note that an args override REPLACES these defaults, so license-header-force needs --force-update
+# repeated alongside --company.
+- id: license-header
+  name: add missing license headers
+  entry: add_license_header.py
+  language: script
+  types: [python]
+  pass_filenames: true
+
+- id: license-header-force
+  name: force update all license headers
+  entry: add_license_header.py
+  language: script
+  types: [python]
+  args: [--force-update]
+  pass_filenames: true

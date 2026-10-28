@@ -1,0 +1,32 @@
+# .pre-commit-config.yaml (in consuming repo)
+
+# Copy this file to the root of your repository as `.pre-commit-config.yaml`.
+# 
+# IMPORTANT: The 'rev' below uses a semantic version tag (immutable).
+# 
+# To update to a newer version, change the version tag below or run:
+# pre-commit autoupdate
+#
+# To see available versions: 
+# git ls-remote --tags https://github.com/vschelbi/python_code_quality
+
+
+repos:
+  - repo: https://github.com/vschelbi/python_code_quality
+    rev: v1.2.1  # Pin to specific version for stability        
+    hooks:
+      # Optional license headers. Pass your own copyright holder via --company,
+      # otherwise the placeholder "COMPANY NAME" is used.
+      # - id: license-header
+      #   args: [--company, "COMPANY NAME"]
+      # - id: license-header-force  # Uncomment to force update ALL license headers
+      #   args: [--force-update, --company, "COMPANY NAME"]
+      - id: isort
+      - id: black
+      - id: flake8
+      - id: mypy
+      - id: pylint
+
+# install the pre-commit package via:
+# pip install pre-commit
+# pre-commit install

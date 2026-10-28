@@ -1,0 +1,16 @@
+# .github/workflows/main.yml (in consuming repo)
+
+# Example workflow config for a consumer repo.
+# This calls the reusable workflow from vschelbi/python_code_quality.
+# Copy this file into your own repo under .github/workflows/.
+
+name: python-code-quality
+on:
+  pull_request:
+
+jobs:
+  python_code_quality:
+    # Prefixed to every check name, so keep it short.
+    name: quality
+    uses: vschelbi/python_code_quality/.github/workflows/main.yml@v1.2.1
+    secrets: inherit

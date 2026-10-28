@@ -1,0 +1,78 @@
+name: lint-and-typecheck
+on:
+  workflow_call: {}   # Makes it reusable
+
+jobs:
+  quality:
+    # Display the check as just the tool name (e.g. "isort") instead of
+    # the default "quality (isort)".
+    name: ${{ matrix.check }}
+    # Each matrix value becomes an independent job that runs in parallel.
+    strategy:
+      fail-fast: false          # Don't cancel the matrix if one job fails
+      matrix:
+        check: [isort, black, flake8, mypy, pylint]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      # -- Setup ------------------------------------------------------------
+      - uses: actions/checkout@v4
+
+      # bring in the pylint shared config
+      - name: Checkout shared config
+        uses: actions/checkout@v4
+        with:
+          repository: vschelbi/python_code_quality
+          ref: v1.2.1          # The same tag you tell consumers to pin
+          path: _configs
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install tooling
+        run: pip install isort black flake8 mypy pylint pydantic
+
+      # -- Detect changed *.py files once per job ---------------------------
+      - name: Get changed Python files
+        id: changed
+        uses: tj-actions/changed-files@v46
+        with:
+          files: |
+            *.py
+            **/*.py
+
+      # -- Run the selected checker ----------------------------------------
+      - name: Run ${{ matrix.check }}
+        # Skip the job entirely if no Python file changed
+        if: ${{ steps.changed.outputs.any_changed == 'true' }}
+        run: |
+          FILES='${{ steps.changed.outputs.all_changed_files }}'
+          case "${{ matrix.check }}" in
+            isort)
+              echo "isort …"
+              isort --check-only --diff --profile black --line-length 99 $FILES
+              ;;
+            black)
+              echo "black …"
+              black --check --line-length 99 $FILES
+              ;;
+            flake8)
+              echo "flake8 …"
+              flake8 --max-line-length 100 --extend-ignore=E203 $FILES
+              ;;
+            mypy)
+              echo "mypy …"
+              mypy --config-file=_configs/mypy-pydantic.ini $FILES
+              ;;
+            pylint)
+              echo "pylint …"
+              pylint --rcfile _configs/.pylintrc $FILES
+              ;;
+          esac
+
+      # -- Informative no-op step when nothing changed ----------------------
+      - name: Nothing to lint – ${{ matrix.check }} skipped
+        if: ${{ steps.changed.outputs.any_changed != 'true' }}
+        run: echo "No *.py changes detected – skipping ${{ matrix.check }}."
