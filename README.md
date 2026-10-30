@@ -122,6 +122,38 @@ Alternatives, if you already use them:
 > [!NOTE]
 > An existing venv keeps the Python it was created with. After changing `.python-version`, delete and recreate it.
 
+#### Projects managed with uv (`uv.lock`)
+
+If your repository is a uv project (it has `pyproject.toml` and `uv.lock` and you run `uv sync`), do **not**
+install `requirements.txt` with `pip install -r` as above. `uv sync` removes every package that is not in `uv.lock`,
+so the tools would be gone after the next sync. Copy the pins into your `dev` dependency group instead:
+
+```toml
+[dependency-groups]
+dev = [
+    # Same versions as requirements.txt of python_code_quality at the tag in
+    # .pre-commit-config.yaml, so CI and the hooks agree. Update both together.
+    "pylint==4.1.3",
+    "isort==9.0.2",
+    "black==26.10.1",
+    "flake8==7.5.0",
+    "mypy==2.4.1",
+    "pre-commit==4.7.0",
+]
+```
+
+Use `==`, not `>=`, otherwise `uv lock` can pick newer versions than CI. Then set up the hooks from the synced venv:
+
+```bash
+uv sync
+source .venv/bin/activate
+pre-commit install
+```
+
+Keep `.venv` active in the shell you commit from, as with any other environment. On every tag bump, copy the new
+versions from `requirements.txt` into `pyproject.toml` and run `uv sync`. The same applies to other tools with a
+lock file, such as Poetry or PDM.
+
 ### 3. GitHub Actions: No Token Needed
 
 This repository is public, so the reusable workflow checks out the shared configuration files (`.pylintrc`,
@@ -179,7 +211,8 @@ To update the centralized quality checks, modify the following files:
 - **Pylint configuration**: Modify the [`.pylintrc`](.pylintrc) file
 - **Tool versions**: Update the pins in [`requirements.txt`](requirements.txt). Check that every new pin still
   supports the Python versions listed in [step 2](#2-pin-the-python-and-tool-versions-required), and update that list
-  if it changes
+  if it changes. Also update the copy of the pins in the
+  [uv project example](#projects-managed-with-uv-uvlock)
 - **Scripts**: Leave the `#!/usr/bin/env python` shebangs alone — `python3` does not exist in Windows environments and
   breaks the hooks there
 

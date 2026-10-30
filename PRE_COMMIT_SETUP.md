@@ -44,6 +44,10 @@ the `rev:` in your config, and re-run it after every `rev:` bump. Create the env
 your repository's `.python-version` file; [README.md](README.md#creating-the-environment) shows how with venv, pyenv,
 uv or conda.
 
+If your repository is a uv project with a `uv.lock`, skip the `pip install` above: `uv sync` would remove the tools
+again. Pin them in your `pyproject.toml` instead, as shown in
+[README.md](README.md#projects-managed-with-uv-uvlock).
+
 If a tool is missing you will get a `command not found` / `mypy not found` error from the corresponding hook, not a
 lint failure.
 
