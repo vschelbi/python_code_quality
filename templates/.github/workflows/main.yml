@@ -12,5 +12,5 @@ jobs:
   python_code_quality:
     # Prefixed to every check name, so keep it short.
     name: quality
-    uses: vschelbi/python_code_quality/.github/workflows/main.yml@v1.2.1
+    uses: vschelbi/python_code_quality/.github/workflows/main.yml@v2.0.0
     secrets: inherit

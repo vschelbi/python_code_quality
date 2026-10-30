@@ -10,13 +10,8 @@ def main() -> int:
     rcfile = pathlib.Path(__file__).parent / ".pylintrc"
     args = [f"--rcfile={rcfile}"] + sys.argv[1:]
 
-    # Pylint >=2.5 uses do_exit, older releases used exit
-    try:
-        # new API
-        run = pylint.lint.Run(args, do_exit=False)  # type: ignore[call-arg] # pylint: disable=unexpected-keyword-arg
-    except TypeError:
-        # old API
-        run = pylint.lint.Run(args, exit=False)  # type: ignore[call-arg] # pylint: disable=unexpected-keyword-arg
+    # exit=False returns instead of calling sys.exit (pylint >=2.5, pinned in requirements.txt)
+    run = pylint.lint.Run(args, exit=False)
 
     return run.linter.msg_status  # 0 = success
 

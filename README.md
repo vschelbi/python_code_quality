@@ -56,23 +56,80 @@ This will copy:
 
 Of course, you can also manually copy the individual files if you prefer.
 
-> [!NOTE]
-> After copying the template files, you'll need to install the required packages: `pip install -r requirements.txt` in your conda environment.
-> Or manually install the following packages:
-> ```bash
-> pip install isort pylint black flake8 mypy pre-commit
-> ```
-
 The `.github` folder in `templates/.github/` will not trigger GitHub Actions in this repository - it's safely nested and only becomes active when copied to your repository root.
 
-### 2. GitHub Actions: No Token Needed
+### 2. Pin the Python and Tool Versions (required)
+
+The GitHub Action and the pre-commit hooks must run the same Python and the same tool versions, otherwise a check
+can pass locally and fail on the pull request. Each version is defined in exactly one place:
+
+| What | Defined in | Read by |
+|---|---|---|
+| Python version | `.python-version` in **your** repository | `actions/setup-python` in the reusable workflow; uv and pyenv locally |
+| Tool versions (pylint, mypy, black, …) | [`requirements.txt`](requirements.txt) in **this** repository, fixed by the release tag | the reusable workflow; your local environment |
+| Lint rules | `.pylintrc`, `mypy*.ini` and the hook `args` in **this** repository | the reusable workflow; the pre-commit hooks |
+
+**Python version.** Add a `.python-version` file to your repository root containing just the minor version:
+
+```text
+3.14
+```
+
+The reusable workflow fails with an explicit error if this file is missing. The pinned tools support Python 3.11 to
+3.14. Python 3.15 is not supported yet: pylint crashes there in the `dill` library it uses for parallel runs.
+
+**Tool versions.** Install the pinned tools into your environment, using the same tag as in your workflow and
+`.pre-commit-config.yaml`:
+
+```bash
+pip install -r https://raw.githubusercontent.com/vschelbi/python_code_quality/v2.0.0/requirements.txt
+```
+
+Re-run this after every tag bump. The pre-commit hooks run the tools from your active environment, so they only match
+CI if this environment has the pinned versions.
+
+**Keep the tags in sync.** Your repository references this repository's tag in two places, `@v2.0.0` in
+`.github/workflows/main.yml` and `rev: v2.0.0` in `.pre-commit-config.yaml`. Always bump both together.
+
+#### Creating the environment
+
+Plain `venv` and `pip` are the default and need nothing else installed. `python -m venv` does **not** read
+`.python-version` itself, so call the matching interpreter explicitly:
+
+```bash
+python3.14 -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r https://raw.githubusercontent.com/vschelbi/python_code_quality/v2.0.0/requirements.txt
+```
+
+Alternatives, if you already use them:
+
+- **pyenv** reads `.python-version` and switches `python` to that version in your repository. Install the version once
+  with `pyenv install 3.14`, then `python -m venv .venv` picks it automatically.
+- **uv** (optional, not required by anything in this repository) reads `.python-version` and downloads that Python if
+  it is missing. It replaces the first and last of the commands above:
+
+  ```bash
+  uv venv
+  source .venv/bin/activate
+  uv pip install -r https://raw.githubusercontent.com/vschelbi/python_code_quality/v2.0.0/requirements.txt
+  ```
+
+  After activating the venv, run the tools as usual (`pylint …`, `git commit`). No `uv` prefix is needed.
+- **conda** ignores `.python-version`. Pass the version yourself: `conda create -n myproject python=3.14`, then
+  install the pinned tools with `pip` as above.
+
+> [!NOTE]
+> An existing venv keeps the Python it was created with. After changing `.python-version`, delete and recreate it.
+
+### 3. GitHub Actions: No Token Needed
 
 This repository is public, so the reusable workflow checks out the shared configuration files (`.pylintrc`,
 `mypy-pydantic.ini`) without any access token or secret.
 
 If the workflow fails to start or cannot check out the shared configuration:
 
-1. **Check repository reference**: Ensure the workflow references `vschelbi/python_code_quality/.github/workflows/main.yml@v1.0.0` (or another valid version tag)
+1. **Check repository reference**: Ensure the workflow references `vschelbi/python_code_quality/.github/workflows/main.yml@v2.0.0` (or another valid version tag)
 2. **Organization policies**: Some organizations restrict which external reusable workflows may run - check with your GitHub admin
 
 > [!NOTE]
@@ -82,7 +139,7 @@ If the workflow fails to start or cannot check out the shared configuration:
 > sharing under Settings → Actions → General → Access
 > ([GitHub Docs](https://docs.github.com/en/actions/how-tos/reuse-automations/share-across-private-repositories)).
 
-### 3. Set up Pre-commit Hooks (optional but recommended)
+### 4. Set up Pre-commit Hooks (optional but recommended)
 
 > [!TIP]
 > [PRE_COMMIT_SETUP.md](PRE_COMMIT_SETUP.md) covers this step in full detail — prerequisites, everyday use, updating,
@@ -120,6 +177,9 @@ To update the centralized quality checks, modify the following files:
 - **Pre-commit hooks**: Update [the hook definitions](.pre-commit-hooks.yaml) — hook entries, `args` and new hook ids
   go here
 - **Pylint configuration**: Modify the [`.pylintrc`](.pylintrc) file
+- **Tool versions**: Update the pins in [`requirements.txt`](requirements.txt). Check that every new pin still
+  supports the Python versions listed in [step 2](#2-pin-the-python-and-tool-versions-required), and update that list
+  if it changes
 - **Scripts**: Leave the `#!/usr/bin/env python` shebangs alone — `python3` does not exist in Windows environments and
   breaks the hooks there
 
@@ -182,12 +242,12 @@ To create a new version:
    - `.pre-commit-config.yaml`: rev: v1.0.0 → v1.0.1
    - `templates/.github/workflows/main.yml`: @v1.0.0 → @v1.0.1
    - `.github/workflows/main.yml`: ref: v1.0.0 → v1.0.1
-   - Update README.md examples if needed
+   - Update the examples in README.md and PRE_COMMIT_SETUP.md, including the `requirements.txt` install URLs
 
    Check that none were missed:
 
    ```bash
-   grep -rn "v[0-9]*\.[0-9]*\.[0-9]*" --include="*.yaml" --include="*.yml" .
+   grep -rn "v[0-9]*\.[0-9]*\.[0-9]*" --include="*.yaml" --include="*.yml" --include="*.md" .
    ```
 
 2. Stage the changes and make sure the hook scripts are still executable in git

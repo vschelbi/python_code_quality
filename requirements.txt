@@ -1,6 +1,9 @@
-isort
-pylint
-black
-flake8
-mypy
-pre-commit
+# Pinned tool versions. The GitHub Action installs this file and local environments should too,
+# so CI and pre-commit run the same versions. Bump the pins together with a new release tag.
+# All pins support Python 3.11 to 3.14.
+isort==9.0.2
+pylint==4.1.3
+black==26.10.1
+flake8==7.5.0
+mypy==2.4.1
+pre-commit==4.7.0

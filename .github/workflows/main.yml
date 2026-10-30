@@ -24,15 +24,25 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: vschelbi/python_code_quality
-          ref: v1.2.1          # The same tag you tell consumers to pin
+          ref: v2.0.0          # The same tag you tell consumers to pin
           path: _configs
+
+      # The consuming repo picks its Python version, so CI matches its local venv
+      - name: Check for .python-version
+        run: |
+          if [ ! -f .python-version ]; then
+            echo "::error::Missing .python-version in the repository root (e.g. containing 3.14)." \
+              "See the python_code_quality README."
+            exit 1
+          fi
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version-file: .python-version
 
+      # Tool versions are pinned in the shared config, per release tag
       - name: Install tooling
-        run: pip install isort black flake8 mypy pylint pydantic
+        run: pip install -r _configs/requirements.txt pydantic
 
       # -- Detect changed *.py files once per job ---------------------------
       - name: Get changed Python files

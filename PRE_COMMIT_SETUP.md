@@ -36,8 +36,13 @@ The hooks run the linters from **your active Python environment** rather than in
 So the tools must be installed in the environment you commit from (your conda env, venv, …):
 
 ```bash
-pip install pre-commit isort black flake8 mypy pylint
+pip install -r https://raw.githubusercontent.com/vschelbi/python_code_quality/v2.0.0/requirements.txt
 ```
+
+This installs the tool versions pinned for that release, the same ones the GitHub Action uses. Use the same tag as
+the `rev:` in your config, and re-run it after every `rev:` bump. Create the environment with the Python version from
+your repository's `.python-version` file; [README.md](README.md#creating-the-environment) shows how with venv, pyenv,
+uv or conda.
 
 If a tool is missing you will get a `command not found` / `mypy not found` error from the corresponding hook, not a
 lint failure.
@@ -69,7 +74,7 @@ Create `.pre-commit-config.yaml` in the **root of your repository** with this co
 ```yaml
 repos:
   - repo: https://github.com/vschelbi/python_code_quality
-    rev: v1.2.1  # Pin to a specific version for stability
+    rev: v2.0.0  # Pin to a specific version for stability
     hooks:
       # - id: license-header        # Optional, see below
       - id: isort
@@ -145,7 +150,8 @@ Then either edit `rev:` in your `.pre-commit-config.yaml` by hand, or let pre-co
 pre-commit autoupdate
 ```
 
-Commit the resulting change to `.pre-commit-config.yaml` so your whole team moves together.
+Commit the resulting change to `.pre-commit-config.yaml` so your whole team moves together. Then re-install the tools
+from the new tag's `requirements.txt` (see [Prerequisites](#prerequisites)), since a new tag can pin new versions.
 
 ## Optional: license headers
 

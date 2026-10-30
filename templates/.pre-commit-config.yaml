@@ -13,7 +13,7 @@
 
 repos:
   - repo: https://github.com/vschelbi/python_code_quality
-    rev: v1.2.1  # Pin to specific version for stability        
+    rev: v2.0.0  # Pin to specific version for stability        
     hooks:
       # Optional license headers. Pass your own copyright holder via --company,
       # otherwise the placeholder "COMPANY NAME" is used.

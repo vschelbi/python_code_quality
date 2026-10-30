@@ -54,7 +54,9 @@ def _get_git_year(file_path: Path, git_args: list[str]) -> int | None:
     """Get year from git log command, returning None if failed."""
     try:
         result = subprocess.run(
-            ["git", "log", "--follow", "--format=%ad", "--date=format:%Y"] + git_args + [str(file_path)],
+            ["git", "log", "--follow", "--format=%ad", "--date=format:%Y"]
+            + git_args
+            + [str(file_path)],
             capture_output=True,
             text=True,
             cwd=file_path.parent,
@@ -149,7 +151,11 @@ def _extract_shebang_lines(lines: list[str]) -> tuple[list[str], int]:
     content_start_idx = 0
 
     for i, line in enumerate(lines):
-        if line.startswith("#!") or line.startswith("# -*- coding:") or line.startswith("# coding:"):
+        if (
+            line.startswith("#!")
+            or line.startswith("# -*- coding:")
+            or line.startswith("# coding:")
+        ):
             shebang_lines.append(line)
             content_start_idx = i + 1
         else:
@@ -166,7 +172,9 @@ def _skip_empty_lines_after_index(lines: list[str], start_idx: int) -> int:
     return i
 
 
-def _find_and_replace_copyright_block(lines: list[str], start_idx: int, correct_license: str) -> list[str]:
+def _find_and_replace_copyright_block(
+    lines: list[str], start_idx: int, correct_license: str
+) -> list[str]:
     """Find existing copyright block and replace it with correct license."""
     new_lines = lines[:start_idx]
     i = start_idx
@@ -350,10 +358,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Add license headers to Python files")
     parser.add_argument("filenames", nargs="*", help="Filenames to check and potentially modify")
     parser.add_argument(
-        "--dry-run", action="store_true", help="Show which files would be modified without making changes"
+        "--dry-run",
+        action="store_true",
+        help="Show which files would be modified without making changes",
     )
     parser.add_argument(
-        "--force-update", action="store_true", help="Update all license headers even if they already exist"
+        "--force-update",
+        action="store_true",
+        help="Update all license headers even if they already exist",
     )
     parser.add_argument(
         "--company",
